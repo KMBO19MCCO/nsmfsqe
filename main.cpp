@@ -40,8 +40,9 @@ int main() {
     vector<float> coefficients(p + 1);
     auto result = generate_polynomial<float>(p, 0, 2, 0, 10.0 / 5, -10, 10, roots, coefficients);
     float x0, x1;
-    solve_quadratic<float>(coefficients[0], coefficients[1], coefficients[3], &x0, &x1);
-    vector<float> roots_computed = {x0, x1};
+    solve_quadratic<float>(coefficients[2], coefficients[1], coefficients[0], &x0, &x1);
+    vector<float> roots_computed = {x1, x0};
+    cout << std::setprecision(14);
     cout << x0 << ' ' << x1 << endl;
     cout << roots[0] << ' ' << roots[1] << endl;
     float deviation = 0;
