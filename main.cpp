@@ -4,7 +4,9 @@
 
 #include <cmath>
 #include <iostream>
+#include <omp.h>
 #include "excerpt.h"
+#include "Timer.h"
 
 using namespace std;
 
@@ -17,7 +19,7 @@ using namespace std;
   Oct. 2013, pp. 2245-2264
 */
 template<typename fp_t>
-fp_t diff_of_products(fp_t a, fp_t b, fp_t c, fp_t d) {
+auto diff_of_products(fp_t a, fp_t b, fp_t c, fp_t d) {
     auto w = d * c;
     auto e = fma(-d, c, w);
     auto f = fma(a, b, -w);
@@ -34,19 +36,63 @@ void solve_quadratic(fp_t a, fp_t b, fp_t c, fp_t *x0, fp_t *x1) {
     *x1 = c / q;
 }
 
+template<typename fp_t>
+auto testPolynomial(unsigned int roots_count) {
+    fp_t x0, x1, deviation;
+    vector<fp_t> roots(roots_count), coefficients(roots_count + 1);
+    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, 10.0 / 5, -5, 5, roots, coefficients);
+    solve_quadratic<fp_t>(coefficients[2], coefficients[1], coefficients[0], &x0, &x1);
+    vector<fp_t> roots_computed = {x1, x0};
+    auto result = compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots, deviation);
+    switch (result) {
+        case PR_2_INFINITE_ROOTS:
+            cout << "INFINITE ROOTS";
+            break;
+        case PR_AT_LEAST_ONE_ROOT_IS_FAKE:
+            cout << "AT LEAST ONE ROOT IS FAKE";
+            break;
+        case PR_AT_LEAST_ONE_ROOT_LOST:
+            cout << "AT LEAST ONE ROOT LOST";
+            break;
+        default:
+            break;
+    }
+    return deviation;
+}
+
+
 int main() {
-    unsigned p = 2;
-    vector<float> roots(p);
-    vector<float> coefficients(p + 1);
-    auto result = generate_polynomial<float>(p, 0, 2, 0, 10.0 / 5, -10, 10, roots, coefficients);
-    float x0, x1;
-    solve_quadratic<float>(coefficients[2], coefficients[1], coefficients[0], &x0, &x1);
-    vector<float> roots_computed = {x1, x0};
-    cout << std::setprecision(14);
-    cout << x0 << ' ' << x1 << endl;
-    cout << roots[0] << ' ' << roots[1] << endl;
-    float deviation = 0;
-    auto result2 = compare_roots<float>(p, p, roots_computed, roots, deviation);
-    cout << "deviation: " << deviation << endl;
+    auto max_deviation = 0.f;
+    auto cores = omp_get_num_procs();
+    auto *deviations = new float[cores];
+
+#pragma omp parallel for
+    for (auto i = 0; i < cores; ++i) {
+        deviations[i] = 0;
+    }
+
+    cout << "Threads: " << cores << endl;
+    cout << "Started" << endl;
+    auto timer = Timer("compute");
+    timer.start();
+
+#pragma omp parallel for
+    for (auto i = 0; i < 10 * 1000 * 1000; ++i) {
+        auto thread_id = omp_get_thread_num();
+        auto deviation = testPolynomial<float>(2);
+        if (deviation > deviations[thread_id] and deviation != numeric_limits<float>::infinity()) {
+            deviations[thread_id] = deviation;
+        }
+    }
+
+    cout << "Computed, started searching" << endl;
+    timer.stop();
+    for (auto i = 0; i < cores; ++i) {
+        if (deviations[i] > max_deviation) {
+            max_deviation = deviations[i];
+        }
+    }
+    delete[] deviations;
+    cout << "Max deviation: " << max_deviation*100 << '%' << endl;
     return 0;
 }
