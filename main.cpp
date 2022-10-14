@@ -40,7 +40,7 @@ template<typename fp_t>
 auto testPolynomial(unsigned int roots_count) {
     fp_t x0, x1, deviation;
     vector<fp_t> roots(roots_count), coefficients(roots_count + 1);
-    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, 10.0 / 5, -5, 5, roots, coefficients);
+    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, 1e-5, -1, 1, roots, coefficients);
     solve_quadratic<fp_t>(coefficients[2], coefficients[1], coefficients[0], &x0, &x1);
     vector<fp_t> roots_computed = {x1, x0};
     auto result = compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots, deviation);
@@ -61,10 +61,12 @@ auto testPolynomial(unsigned int roots_count) {
 }
 
 
+typedef float fp_t;
+
 int main() {
-    auto max_deviation = 0.f;
+    fp_t max_deviation = 0;
     auto cores = omp_get_num_procs();
-    auto *deviations = new float[cores];
+    auto *deviations = new fp_t[cores];
 
 #pragma omp parallel for
     for (auto i = 0; i < cores; ++i) {
@@ -77,10 +79,10 @@ int main() {
     timer.start();
 
 #pragma omp parallel for
-    for (auto i = 0; i < 10 * 1000 * 1000; ++i) {
+    for (auto i = 0; i < 1000'1000; ++i) {
         auto thread_id = omp_get_thread_num();
-        auto deviation = testPolynomial<float>(2);
-        if (deviation > deviations[thread_id] and deviation != numeric_limits<float>::infinity()) {
+        auto deviation = testPolynomial<fp_t>(2);
+        if (deviation > deviations[thread_id] and deviation != numeric_limits<fp_t>::infinity()) {
             deviations[thread_id] = deviation;
         }
     }
@@ -92,7 +94,7 @@ int main() {
             max_deviation = deviations[i];
         }
     }
+    cout << "Max deviation: " << max_deviation << endl;
     delete[] deviations;
-    cout << "Max deviation: " << max_deviation*100 << '%' << endl;
     return 0;
 }
