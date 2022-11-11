@@ -1,3 +1,15 @@
+#ifndef POLYROOTS1234_HPP
+#define POLYROOTS1234_HPP
+#define PR_NUMBERS_OF_ROOTS_EQUAL     0
+#define PR_AT_LEAST_ONE_ROOT_LOST    -1
+#define PR_AT_LEAST_ONE_ROOT_IS_FAKE -2
+#define PR_2_INFINITE_ROOTS          -3
+
+#define PR_DISCRIMINANT_USE_TRADITIONAL_OPERATIONS_NORMALIZED 0
+#define PR_DISCRIMINANT_USE_TRADITIONAL_OPERATIONS_NORMALIZED 0
+#define PR_DISCRIMINANT_USE_FMA_UNNORMALIZED 0
+#define PR_DISCRIMINANT_USE_FMA_NORMALIZED 0
+//#include <array>
 #include <cmath>
 #include <numbers> // std::numbers::pi_v<fp_t>, requires -std=c++20
 #include <chrono> // for testing only
@@ -6,26 +18,33 @@
 #include <cassert>
 #include <iostream>
 #include <iomanip>
-#include <vector>
+#include <complex>
 
-#ifndef EXCERPT_EXCERPT_H
-#define EXCERPT_EXCERPT_H
-#define PR_NUMBERS_OF_ROOTS_EQUAL     0
-#define PR_AT_LEAST_ONE_ROOT_LOST    (-1)
-#define PR_AT_LEAST_ONE_ROOT_IS_FAKE (-2)
-#define PR_2_INFINITE_ROOTS          (-3)
+// Finds all real roots of a quadratic polynomial in the form: a*x^2 + b*x + c = 0
+// This implementation should process correctly all the situations and returns 0,1 (linear case, a=0 !) or 2 roots. It returns
+// double quadratic root twice, in order to keep statistics more correct way; it serves solely verification purposes because
+// no optimizations and enhancements introduced
+int polyroots2plain(float a, float b, float c, // polynomial coefficients
+        // pre allocated vector where to put the roots; the size should not be less than 2
+                    std::vector<float> &roots);
 
+// checks attainable number of real roots in a polynomial: a*x^4 + b*x^3 + c*x^2 + d*x + e; multiple root is treated as separate roots
+template<typename fp_t>
+int number_of_roots(unsigned P, // polynomial degree
+                    fp_t a, fp_t b, fp_t c, fp_t d, fp_t e); // polynomial coefficients
 // Compares two vectors of roots; root orderings play no role. For each entry in (roots_ground_truth),
 // the closest entry in (roots_to_check) is found and corresponding distance found. Among such distances
 // the largest will be stored to (max_deviation)
 template<typename fp_t>
 int compare_roots(
-        unsigned N_roots_to_check, // number of roots in roots_to_check
-        unsigned N_roots_ground_truth,  // number of roots in roots_ground_truth
-        std::vector<fp_t> &roots_to_check, // one should take into account only first (N_roots_to_check) rots
-        std::vector<fp_t> &roots_ground_truth, // one should take into account only first (N_roots_ground_truth) rots
-        fp_t &max_deviation); // here will be placed the greatest among the smallest deviations of the roots in
-// (roots_to_check) and (roots_ground_truth)
+        unsigned N_roots_to_check, // number of roots in (roots_to_check)
+        unsigned N_roots_ground_truth,  // number of roots in (roots_ground_truth)
+        std::vector<fp_t> &roots_to_check, // one should take into account only first (N_roots_to_check) roots here
+        std::vector<fp_t> &roots_ground_truth, // one should take into account only first (N_roots_ground_truth) roots here
+        fp_t &max_absolute_error, // here the greatest among the smallest deviations of the roots in (roots_to_check) and (roots_ground_truth)
+        // will be placed
+        // here the greatest relative error among all the roots found will be placed
+        fp_t &max_relative_error);
 
 
 // Creates a test polynomial, both in the form of roots, e.g. (x-roots[0])*(x-roots[1])*(quadratic polynomial with no real roots) and
@@ -44,5 +63,14 @@ int generate_polynomial(
         std::vector<fp_t> &roots, // storage where to put the roots; size should exceed P-1
         std::vector<fp_t> &coefficients);
 
+template<typename fp_t>
+int compare_roots_complex(unsigned N_roots_to_check, // number of roots in roots_to_check
+                          unsigned N_roots_ground_truth,  // number of roots in roots_ground_truth
+                          std::vector<std::complex<fp_t>> &roots_to_check, // one should take into account only first (N_roots_to_check) rots
+                          std::vector<fp_t> &roots_ground_truth, // one should take into account only first (N_roots_ground_truth) rots
+                          fp_t &max_absolute_error, // here the greatest among the smallest deviations of the roots in (roots_to_check) and (roots_ground_truth)
+        // will be placed
+        // here the greatest relative error among all the roots found will be placed
+                          fp_t &max_relative_error);
 
-#endif //EXCERPT_EXCERPT_H
+#endif //POLYROOTS1234_HPP

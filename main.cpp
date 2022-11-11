@@ -37,13 +37,15 @@ void solve_quadratic(fp_t a, fp_t b, fp_t c, fp_t *x0, fp_t *x1) {
 }
 
 template<typename fp_t>
-auto testPolynomial(unsigned int roots_count) {
-    fp_t x0, x1, deviation;
+fp_t testPolynomial(unsigned int roots_count) {
+    fp_t x0, x1, max_absolute_error, max_relative_error;
     vector<fp_t> roots(roots_count), coefficients(roots_count + 1);
-    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, 1e-5, -1, 1, roots, coefficients);
+    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, numeric_limits<fp_t>::min(), -1, 1, roots, coefficients);
     solve_quadratic<fp_t>(coefficients[2], coefficients[1], coefficients[0], &x0, &x1);
     vector<fp_t> roots_computed = {x1, x0};
-    auto result = compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots, deviation);
+    if (isnan(x1) and isnan(x0)) return 0.0;
+    auto result = compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots, max_absolute_error,
+                                      max_relative_error);
     switch (result) {
         case PR_2_INFINITE_ROOTS:
             cout << "INFINITE ROOTS";
@@ -57,7 +59,7 @@ auto testPolynomial(unsigned int roots_count) {
         default:
             break;
     }
-    return deviation;
+    return max_absolute_error;
 }
 
 
