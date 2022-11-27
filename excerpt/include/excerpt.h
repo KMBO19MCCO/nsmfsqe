@@ -20,14 +20,6 @@
 #include <iomanip>
 #include <complex>
 
-// Finds all real roots of a quadratic polynomial in the form: a*x^2 + b*x + c = 0
-// This implementation should process correctly all the situations and returns 0,1 (linear case, a=0 !) or 2 roots. It returns
-// double quadratic root twice, in order to keep statistics more correct way; it serves solely verification purposes because
-// no optimizations and enhancements introduced
-int polyroots2plain(float a, float b, float c, // polynomial coefficients
-        // pre allocated vector where to put the roots; the size should not be less than 2
-                    std::vector<float> &roots);
-
 // checks attainable number of real roots in a polynomial: a*x^4 + b*x^3 + c*x^2 + d*x + e; multiple root is treated as separate roots
 template<typename fp_t>
 int number_of_roots(unsigned P, // polynomial degree

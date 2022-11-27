@@ -8,6 +8,8 @@
 #include "excerpt.h"
 #include "Timer.h"
 
+#define MAX_DISTANCE 10e-5
+
 using namespace std;
 
 /*
@@ -20,9 +22,9 @@ using namespace std;
 */
 template<typename fp_t>
 auto diff_of_products(fp_t a, fp_t b, fp_t c, fp_t d) {
-    auto w = d * c;
-    auto e = fma(-d, c, w);
-    auto f = fma(a, b, -w);
+    auto w = -d * c;
+    auto e = fma(d, c, w);
+    auto f = fma(a, b, w);
     return f + e;
 }
 
@@ -40,7 +42,7 @@ template<typename fp_t>
 fp_t testPolynomial(unsigned int roots_count) {
     fp_t x0, x1, max_absolute_error, max_relative_error;
     vector<fp_t> roots(roots_count), coefficients(roots_count + 1);
-    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, numeric_limits<fp_t>::min(), -1, 1, roots, coefficients);
+    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, MAX_DISTANCE, -1, 1, roots, coefficients);
     solve_quadratic<fp_t>(coefficients[2], coefficients[1], coefficients[0], &x0, &x1);
     vector<fp_t> roots_computed = {x1, x0};
     if (isnan(x1) and isnan(x0)) return 0.0;
